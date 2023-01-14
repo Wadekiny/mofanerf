@@ -1,7 +1,6 @@
 expname = mofanerf #_LMSample
 basedir = ./logs
-#datadir = ../data/multiViewImages
-datadir= /home/wadekiny/code/dataset/mofanerf_trainset/train/multi-view-images/
+datadir = ../data/multiViewImages
 
 dataset_type = blender
 person_num = 300

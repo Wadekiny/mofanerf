@@ -2,3 +2,9 @@
 *.tar
 __pycache__
 .idea
+mofanerf_pretrained_model.tar.gz
+.small_requirements.txt.un~
+.run_train.py.un~
+logs/mofanerf_16_17_18_19_20
+logs
+configs/.exp_mofanerf.txt.un~

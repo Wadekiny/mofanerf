@@ -1,5 +1,7 @@
 import json
 
+import warnings
+warnings.filterwarnings("ignore",category=Warning)
 import cv2
 from tqdm import tqdm, trange
 
@@ -15,6 +17,7 @@ np.random.seed(0)
 DEBUG = False
 
 
+#def load_uvmap(basedir="../data/textureMap300/", personList=None):
 def load_uvmap(basedir="../data/textureMap300/", personList=None):
     fileList = {}
     for id in personList:
@@ -112,13 +115,15 @@ def readImgFromPath(imgPath, half_res=True, white_bkgd=False, is_uvMap=False):
 
 
 def load_bmData():
-    bmModel = np.load('../data/factors_id.npy')
+    #bmModel = np.load('../data/factors_id.npy')
+    bmModel = np.load('/home/wadekiny/code/dataset/mofanerf_testset/factors_id.npy')
     return bmModel
 
 
 class LMModule:
     def __init__(self, H=None):
-        self.landmark = np.load("../data/1_975_landmarks.npy")
+        #self.landmark = np.load("../data/1_975_landmarks.npy")
+        self.landmark = np.load("/home/wadekiny/code/dataset/mofanerf_testset/1_975_landmarks.npy")
         self.H = H
 
     def sample_point(self, numOfPoint=None, K=None, pose=None, id=None, exp=None, coords=None):
@@ -165,8 +170,12 @@ def getValidPerson(datadir):
 def train():
     parser = config_parser()
     args = parser.parse_args()
-    validPerson = getValidPerson(args.datadir)
+    validdatadir = '/home/wadekiny/code/dataset/mofanerf_testset/test/multi-view-images'
+    #validPerson = getValidPerson(args.datadir)
+    validPerson = getValidPerson(validdatadir)
     args.device = device
+    args.datadir = "/home/wadekiny/code/dataset/mofanerf_trainset/train/multi-view-images/"
+    args.personList = '16,17,18,19,20'
     if args.personList is not None:
         args.personList = args.personList.split(",")
         args.person_num = len(args.personList)
@@ -184,7 +193,8 @@ def train():
                                                                                                        args.half_res,
                                                                                                        args.testskip,
                                                                                                        args.personList)
-        uv_images = load_uvmap(personList=args.personList)  # ODO: uv_images
+        #uv_images = load_uvmap(personList=args.personList)  # ODO: uv_images
+        uv_images = load_uvmap(basedir="/home/wadekiny/code/dataset/mofanerf_trainset/train/texture/",personList=args.personList)  # ODO: uv_images
         print('Loaded facescape', shapeCodes.shape, render_poses.shape, hwf, args.datadir)
         i_train, i_val, i_test = i_split
         SCLAE = args.scale
@@ -385,7 +395,9 @@ def train():
             now_test = np.random.choice(i_test, 1)
             print('test poses shape', poses[now_test].shape)
             with torch.no_grad():
-                render.render_path(torch.Tensor(poses[now_test]).to(device), [i // 2 for i in hwf], K // 2,
+                gt_imgs=[readImgFromPath(images[i]).cpu().detach().numpy() for i in now_test]
+                gt_imgs = np.array(gt_imgs)
+                render.render_path(torch.Tensor(poses[now_test]).to(device), [i // 3 for i in hwf], K // 2,
                                    args.chunk // 4, render_kwargs_test,
                                    shapeCodes=torch.Tensor(shapeCodes[now_test]).to(device),
                                    uvMap=torch.stack(
@@ -393,7 +405,8 @@ def train():
                                                         is_uvMap=True) for i in
                                         now_test]),
                                    expType=expTypes[now_test],
-                                   gt_imgs=np.array([readImgFromPath(images[i]) for i in now_test]),
+                                   #gt_imgs=np.array([readImgFromPath(images[i]).cpu() for i in now_test]),
+                                   gt_imgs=gt_imgs,
                                    savedir=testsavedir)
             print('Saved test set')
 
